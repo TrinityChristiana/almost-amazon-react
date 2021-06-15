@@ -1,6 +1,7 @@
 import axiosClient from '../clients/axiosClient';
 
 const ADMIN_ID = process.env.REACT_APP_ADMIN_ID;
+const NON_ADMIN_ID = process.env.REACT_APP_NON_ADMIN_ID;
 
 const convertUserObj = (userObj) => {
   const {
@@ -54,23 +55,32 @@ const convertUserObj = (userObj) => {
 };
 
 // prettier-ignore
-const getAllUserInfo = (userObj) => new Promise((resolve, reject) => {
-  const convertedUser = convertUserObj(userObj);
-  axiosClient
-    .get(`/user__user_types?select=*,user_type_id(*)&user_id=eq.${convertedUser.uid}`)
-    .then((resp) => {
-      const userWithType = {
-        ...convertedUser,
-        isAdmin: resp.data[0].user_type_id.id === ADMIN_ID,
-        userType: resp.data[0],
-      };
+const getUserInfo = (uid) => new Promise((resolve, reject) => (
+  axiosClient.get(`/user__user_types?select=*,user_type_id(*)&user_id=eq.${uid}`))
+  .then((resp) => resolve(resp.data))
+  .catch(reject));
 
-      resolve(userWithType);
-    })
-    .catch(reject);
-});
+// prettier-ignore
+const getAllUserInfo = async (userObj) => {
+  const convertedUser = convertUserObj(userObj);
+  let userInfo = await getUserInfo(convertedUser.uid);
+  if (!userInfo.length) {
+    await axiosClient.post('/user__user_types', {
+      user_id: convertedUser.uid,
+      user_type_id: NON_ADMIN_ID,
+    });
+    userInfo = await getUserInfo(convertedUser.uid);
+  }
+
+  const userWithType = {
+    ...convertedUser,
+    isAdmin: userInfo[0].user_type_id.id === ADMIN_ID,
+    userType: userInfo[0],
+  };
+  return (userWithType);
+};
 
 export {
-  // eslint-disable-next-line import/prefer-default-export
+  // eslint-disable-next-line
   getAllUserInfo, //
 };
