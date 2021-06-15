@@ -1,36 +1,32 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import MainNavbar from '../components/MainNavbar';
+import Routes from '../components/Routes';
+import supabaseClient from '../helpers/clients/supabaseClient';
+import { getAllUserInfo } from '../helpers/data/users';
 import './App.scss';
 
 function App() {
-  const [domWriting, setDomWriting] = useState('Nothing Here!');
+  const [userInfo, setUserInfo] = useState(null);
 
-  const handleClick = (e) => {
-    console.warn(`You clicked ${e.target.id}`);
-    setDomWriting(`You clicked ${e.target.id}! Check the Console!`);
+  const handleSession = (session) => {
+    if (session) {
+      getAllUserInfo(session).then(setUserInfo);
+    } else {
+      setUserInfo(false);
+    }
   };
+
+  useEffect(() => {
+    handleSession(supabaseClient.auth.session());
+    supabaseClient.auth.onAuthStateChange((_, session) => {
+      handleSession(session);
+    });
+  }, []);
 
   return (
     <div className='App'>
-      <h2>INSIDE APP COMPONENT</h2>
-      <div>
-        <button
-          id='this-button'
-          className='btn btn-info'
-          onClick={handleClick}
-        >
-          I am THIS button
-        </button>
-      </div>
-      <div>
-        <button
-          id='that-button'
-          className='btn btn-primary mt-3'
-          onClick={handleClick}
-        >
-          I am THAT button
-        </button>
-      </div>
-      <h3>{domWriting}</h3>
+      <MainNavbar userInfo={userInfo} />
+      <Routes userInfo={userInfo} />
     </div>
   );
 }

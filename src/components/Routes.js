@@ -1,5 +1,5 @@
 import React from 'react';
-import { Redirect, Route } from 'react-router-dom';
+import { Redirect, Route, Switch } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
 const AuthedRoute = ({ component: Component, userInfo, ...rest }) => {
@@ -7,6 +7,7 @@ const AuthedRoute = ({ component: Component, userInfo, ...rest }) => {
     return null;
   }
 
+  // prettier-ignore
   const routeChecker = (taco) => (
     userInfo
       ? <Component
@@ -29,10 +30,7 @@ const AuthedRoute = ({ component: Component, userInfo, ...rest }) => {
 
 AuthedRoute.propTypes = {
   component: PropTypes.func,
-  userInfo: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.bool,
-  ]),
+  userInfo: PropTypes.oneOfType([PropTypes.object, PropTypes.bool]),
 };
 
 const UnAuthedRoute = ({ component: Component, userInfo, ...rest }) => {
@@ -40,6 +38,7 @@ const UnAuthedRoute = ({ component: Component, userInfo, ...rest }) => {
     return null;
   }
 
+  // prettier-ignore
   const routeChecker = (taco) => (
     !userInfo
       ? <Component
@@ -62,10 +61,22 @@ const UnAuthedRoute = ({ component: Component, userInfo, ...rest }) => {
 
 UnAuthedRoute.propTypes = {
   component: PropTypes.func,
-  userInfo: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.bool,
-  ]),
+  userInfo: PropTypes.oneOfType([PropTypes.object, PropTypes.bool]),
+};
+
+const NormalRoute = ({ component: Component, userInfo, ...rest }) => {
+  if (userInfo === null) {
+    return null;
+  }
+
+  const routeChecker = (taco) => <Component {...taco} {...rest} userInfo={userInfo} />;
+
+  return <Route {...rest} render={(props) => routeChecker(props)} />;
+};
+
+NormalRoute.propTypes = {
+  component: PropTypes.func,
+  userInfo: PropTypes.oneOfType([PropTypes.object, PropTypes.bool]),
 };
 
 const AdminRoute = ({ component: Component, userInfo, ...rest }) => {
@@ -73,6 +84,7 @@ const AdminRoute = ({ component: Component, userInfo, ...rest }) => {
     return null;
   }
 
+  // prettier-ignore
   const routeChecker = (taco) => (
     userInfo.isAdmin
       ? <Component
@@ -102,31 +114,108 @@ AdminRoute.propTypes = {
   ]),
 };
 
-const Routes = ({ userInfo }) => {
-  console.warn(userInfo);
-  return (
-    <>
-      <AdminRoute
-        exact
+const Routes = ({ userInfo }) => (
+  <>
+    <Switch>
+      <NormalRoute
+        exact //
         userInfo={userInfo}
-        path="/admin"
-        component={(props) => <> Is Admin {console.warn(props)}</>}
+        path='/'
+        component={() => <>Home</>}
+      />
+      <AdminRoute
+        exact //
+        userInfo={userInfo}
+        path='/admin'
+        component={() => <> Admin</>}
       />
       <AuthedRoute
-        exact
+        exact //
         userInfo={userInfo}
-        path="/authed"
-        component={(props) => <> Authed {console.warn(props)}</>}
+        path='/authed'
+        component={() => <> Authed</>}
       />
       <UnAuthedRoute
-        exact
+        exact //
         userInfo={userInfo}
-        path="/unauthed"
-        component={(props) => <> unauthed {console.warn(props)}</>}
+        path='/unauthed'
+        component={() => <> UnAuthed</>}
       />
-    </>
-  );
-};
+      {/* Author Routes */}
+      {/* <AdminRoute
+        exact //
+        userInfo={userInfo}
+        path='/authors/create'
+        component={() => <> Authed</>}
+      /> */}
+      {/* <AdminRoute
+        exact //
+        userInfo={userInfo}
+        path='/authors/edit/:authorId'
+        component={() => <> Authed</>}
+      /> */}
+      {/* <NormalRoute
+        exact //
+        userInfo={userInfo}
+        path='/authors'
+        component={() => <> Authed</>}
+      /> */}
+      {/* <NormalRoute
+        exact //
+        userInfo={userInfo}
+        path='/authors/:authorId'
+        component={() => <> Authed</>}
+      /> */}
+      {/* Book Routes */}
+      {/* <NormalRoute
+        exact //
+        userInfo={userInfo}
+        path='/books'
+        component={() => <> Authed</>}
+      /> */}
+      {/* <NormalRoute
+        exact //
+        userInfo={userInfo}
+        path='/books/:bookId'
+        component={() => <> Authed</>}
+      /> */}
+      {/* Favorites Routes */}
+      {/* <AuthedRoute
+        exact //
+        userInfo={userInfo}
+        path='/favorites'
+        component={() => <> Authed</>}
+      /> */}
+      {/* <AuthedRoute
+        exact //
+        userInfo={userInfo}
+        path='/favorites/authors'
+        component={() => <> Authed</>}
+      /> */}
+      {/* <AuthedRoute
+        exact //
+        userInfo={userInfo}
+        path='/favorites/books'
+        component={() => <> Authed</>}
+      /> */}
+      {/* Notes Routes */}
+      {/* <AuthedRoute
+        exact //
+        userInfo={userInfo}
+        path='/notes'
+        component={() => <> Authed</>}
+      /> */}
+      {/* User Routes */}
+      {/* <AdminRoute
+        exact //
+        userInfo={userInfo}
+        path='/users'
+        component={() => <> Update User Types </>}
+      /> */}
+      <Redirect to='/' />
+    </Switch>
+  </>
+);
 
 Routes.propTypes = {
   userInfo: PropTypes.oneOfType([
